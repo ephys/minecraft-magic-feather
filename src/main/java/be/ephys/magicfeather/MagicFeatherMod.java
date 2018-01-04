@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 )
 public class MagicFeatherMod {
     public static final String MODID = "magicfeather";
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "2.0.1";
     public static final String NAME = "Magic Feather";
 
     @Mod.Instance
