@@ -84,6 +84,7 @@ public class ItemMagicFeather extends Item {
 
             BlockPos pos = beacon.getPos();
             int x = pos.getX();
+            int y = pos.getY();
             int z = pos.getZ();
 
             if (player.posX < (x - radius) || player.posX > (x + radius)) {
@@ -91,6 +92,10 @@ public class ItemMagicFeather extends Item {
             }
 
             if (player.posZ < (z - radius) || player.posZ > (z + radius)) {
+                continue;
+            }
+            
+            if (player.posY < (y - radius) || player.posY > (y + radius + 256)) {
                 continue;
             }
 
