@@ -1,5 +1,6 @@
 package be.ephys.magicfeather;
 
+import be.ephys.cookiecore.config.ConfigSynchronizer;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -9,7 +10,8 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 @Mod(
         modid = MagicFeatherMod.MODID,
         version = MagicFeatherMod.VERSION,
-        name = MagicFeatherMod.NAME
+        name = MagicFeatherMod.NAME,
+        dependencies="required-after:cookiecore@[2.0.0,);"
 )
 public class MagicFeatherMod {
     public static final String MODID = "magicfeather";
@@ -24,6 +26,8 @@ public class MagicFeatherMod {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+
+        ConfigSynchronizer.synchronizeConfig(event);
         proxy.preInit(event);
     }
 
