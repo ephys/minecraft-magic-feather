@@ -11,11 +11,12 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
         modid = MagicFeatherMod.MODID,
         version = MagicFeatherMod.VERSION,
         name = MagicFeatherMod.NAME,
-        dependencies="required-after:cookiecore@[2.0.0,);"
+        dependencies="required-after:cookiecore@[2.0.0,);",
+        certificateFingerprint = "@FINGERPRINT@"
 )
 public class MagicFeatherMod {
     public static final String MODID = "magicfeather";
-    public static final String VERSION = "2.0.1";
+    public static final String VERSION = "@VERSION@";
     public static final String NAME = "Magic Feather";
 
     @Mod.Instance

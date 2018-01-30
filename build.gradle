@@ -5,15 +5,15 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'org.ajoberstar:gradle-git:0.10.1'
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 
-
-version = "2.0.1"
-group= "be.ephys.magicfeather" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "magicfeather"
+version = "${mc_version}-${mod_version}"
+group = package_group // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = mod_name
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -23,6 +23,10 @@ compileJava {
 minecraft {
     version = "1.12.2-14.23.1.2555"
     runDir = "run"
+
+    replaceIn "CookieCore.java"
+    replace "@VERSION@", mod_version
+    replace "@FINGERPRINT@", project.findProperty('mcSignSHA1')
 
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
@@ -75,3 +79,46 @@ processResources {
         exclude 'mcmod.info'
     }
 }
+
+import org.ajoberstar.grgit.Grgit
+
+def gitHash = 'unknown'
+if (new File(projectDir, '.git').exists()) {
+    def repo = Grgit.open(project.file('.'))
+    gitHash = repo.log().find().abbreviatedId
+}
+
+jar {
+    classifier = ''
+
+    manifest {
+        mainAttributes(
+                "Built-By": System.getProperty('user.name'),
+                "Created-By": "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+                "Implementation-Title": project.name,
+                "Implementation-Version": project.version,
+                "Git-Hash": gitHash
+        )
+    }
+}
+
+task signJar(type: SignJar, dependsOn: reobfJar) {
+
+    // Skips if the keyStore property is missing.
+    onlyIf {
+        project.hasProperty('mcKeyStore')
+    }
+
+    // findProperty allows us to reference the property without it existing.
+    // Using project.propName would cause the script to fail validation if
+    // the property did not exist.
+    keyStore = project.findProperty('mcKeyStore')
+    alias = project.findProperty('mcKeyStoreAlias')
+    storePass = project.findProperty('mcKeyStorePass')
+    keyPass = project.findProperty('mcKeyStoreKeyPass')
+    inputFile = jar.archivePath
+    outputFile = jar.archivePath
+}
+
+// Runs this task automatically when build is ran.
+build.dependsOn signJar
