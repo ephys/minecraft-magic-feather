@@ -47,7 +47,7 @@ public class ItemMagicFeather extends Item {
 
         EntityPlayer player = Minecraft.getMinecraft().player;
         if (player != null) {
-            if (!isInBeaconRange(player)) {
+            if (!BeaconRangeCalculator.isInBeaconRange(player)) {
                 tooltip.add(I18n.format("magicfeather.gui.out_of_beacon_range"));
             }
         }
@@ -66,43 +66,6 @@ public class ItemMagicFeather extends Item {
         entity.setEntityInvulnerable(true);
 
         return null;
-    }
-
-    private static boolean isInBeaconRange(EntityPlayer player) {
-        World world = player.getEntityWorld();
-
-        List<TileEntity> tileEntities = world.loadedTileEntityList;
-        for (TileEntity t : tileEntities) {
-            if (!(t instanceof TileEntityBeacon)) {
-                continue;
-            }
-
-            TileEntityBeacon beacon = (TileEntityBeacon) t;
-
-            int level = beacon.getField(0);
-            int radius = (level * 10 + 10);
-
-            BlockPos pos = beacon.getPos();
-            int x = pos.getX();
-            int y = pos.getY();
-            int z = pos.getZ();
-
-            if (player.posX < (x - radius) || player.posX > (x + radius)) {
-                continue;
-            }
-
-            if (player.posZ < (z - radius) || player.posZ > (z + radius)) {
-                continue;
-            }
-            
-            if (player.posY < (y - radius) || player.posY > (y + radius + 256)) {
-                continue;
-            }
-
-            return true;
-        }
-
-        return false;
     }
 
     private static void setMayFly(EntityPlayer player, boolean mayFly) {
@@ -190,7 +153,7 @@ public class ItemMagicFeather extends Item {
         }
 
         private void onAdd() {
-            if (!ItemMagicFeather.isInBeaconRange(player)) {
+            if (!BeaconRangeCalculator.isInBeaconRange(player)) {
                 return;
             }
 
@@ -211,7 +174,7 @@ public class ItemMagicFeather extends Item {
                 return beaconInRangeCache;
             }
 
-            beaconInRangeCache = ItemMagicFeather.isInBeaconRange(player);
+            beaconInRangeCache = BeaconRangeCalculator.isInBeaconRange(player);
 
             return beaconInRangeCache;
         }
