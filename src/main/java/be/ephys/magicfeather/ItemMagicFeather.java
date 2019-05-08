@@ -12,9 +12,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityBeacon;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -26,6 +23,12 @@ public class ItemMagicFeather extends Item {
 
     public static final String NAME = "magicfeather";
     private static final WeakHashMap<EntityPlayer, MagicFeatherData> playerData = new WeakHashMap<>();
+
+    /**
+     * Changing dimension somehow resulted in a false return in method hasItem()
+     * saving the dimension then resetting the MagicFeatherData on dimension change resolves the issue
+     */
+    private int oldPlayerDimension;
 
     public ItemMagicFeather() {
         super();
@@ -97,6 +100,11 @@ public class ItemMagicFeather extends Item {
 
         EntityPlayer player = event.player;
 
+        if(oldPlayerDimension != player.dimension) {
+            oldPlayerDimension = player.dimension;
+            ItemMagicFeather.playerData.clear();
+        }
+
         MagicFeatherData data = ItemMagicFeather.playerData.get(player);
         if (data == null) {
             data = new MagicFeatherData(player);
@@ -109,7 +117,7 @@ public class ItemMagicFeather extends Item {
     private static boolean hasItem(EntityPlayer player, Item item) {
         for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
             ItemStack stack = player.inventory.getStackInSlot(i);
-            if (item == stack.getItem()) {
+            if (item.equals(stack.getItem())) {
                 return true;
             }
         }
@@ -135,6 +143,7 @@ public class ItemMagicFeather extends Item {
             }
 
             boolean hasItem = hasItem(player, ModItems.magicFeather);
+
             if (hasItem != this.hasItem) {
                 if (hasItem) {
                     this.onAdd();
