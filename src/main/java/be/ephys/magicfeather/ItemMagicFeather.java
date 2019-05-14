@@ -3,7 +3,9 @@ package be.ephys.magicfeather;
 import java.util.List;
 import java.util.WeakHashMap;
 
+import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -14,7 +16,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -93,6 +97,11 @@ public class ItemMagicFeather extends Item {
     }
 
     @SubscribeEvent
+    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+        ItemMagicFeather.playerData.clear();
+    }
+
+    @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side != Side.SERVER) {
             return;
@@ -141,6 +150,7 @@ public class ItemMagicFeather extends Item {
             if (player.isSpectator()) {
                 return;
             }
+
 
             boolean hasItem = hasItem(player, ModItems.magicFeather);
 
