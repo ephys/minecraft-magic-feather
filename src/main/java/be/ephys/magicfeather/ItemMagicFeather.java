@@ -3,6 +3,10 @@ package be.ephys.magicfeather;
 import java.util.List;
 import java.util.WeakHashMap;
 
+import baubles.api.BaubleType;
+import baubles.api.BaublesApi;
+import baubles.api.IBauble;
+import be.ephys.cookiecore.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
@@ -14,15 +18,21 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class ItemMagicFeather extends Item {
+@Optional.Interface (iface = "baubles.api.IBauble", modid = "baubles")
+public class ItemMagicFeather extends Item implements IBauble {
 
     public static final String NAME = "magicfeather";
     private static final WeakHashMap<EntityPlayer, MagicFeatherData> playerData = new WeakHashMap<>();
+
+    @Config(category = "baubles_compat", description = "In which bauble slot can the magic feather be put?")
+    public static BaubleType baubleType = BaubleType.CHARM;
 
     public ItemMagicFeather() {
         super();
@@ -93,6 +103,10 @@ public class ItemMagicFeather extends Item {
     }
 
     private static boolean hasItem(EntityPlayer player, Item item) {
+        if (Loader.isModLoaded("baubles") && BaublesApi.isBaubleEquipped(player, item) != -1) {
+            return true;
+        }
+
         for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
             ItemStack stack = player.inventory.getStackInSlot(i);
             if (item.equals(stack.getItem())) {
@@ -102,6 +116,13 @@ public class ItemMagicFeather extends Item {
 
         return false;
     }
+
+    /* <IBauble> */
+    @Override
+    public baubles.api.BaubleType getBaubleType(ItemStack itemstack) {
+        return ItemMagicFeather.baubleType;
+    }
+    /* </IBauble> */
 
     private static class MagicFeatherData {
         private final EntityPlayer player;
