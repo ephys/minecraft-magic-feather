@@ -3,9 +3,7 @@ package be.ephys.magicfeather;
 import java.util.List;
 import java.util.WeakHashMap;
 
-import com.google.common.eventbus.Subscribe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
@@ -16,9 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -27,12 +23,6 @@ public class ItemMagicFeather extends Item {
 
     public static final String NAME = "magicfeather";
     private static final WeakHashMap<EntityPlayer, MagicFeatherData> playerData = new WeakHashMap<>();
-
-    /**
-     * Changing dimension somehow resulted in a false return in method hasItem()
-     * saving the dimension then resetting the MagicFeatherData on dimension change resolves the issue
-     */
-    private int oldPlayerDimension;
 
     public ItemMagicFeather() {
         super();
@@ -80,25 +70,8 @@ public class ItemMagicFeather extends Item {
             return;
         }
 
-        if (!mayFly) {
-            // force the player on the ground then remove ability to fly
-            // this prevent crashing the the ground and dying
-            // when you accidentally get out of the beacon range
-            player.capabilities.isFlying = false;
-
-            if (player.onGround && player.fallDistance < 1F) {
-                player.capabilities.allowFlying = false;
-            }
-        } else {
-            player.capabilities.allowFlying = true;
-        }
-
+        player.capabilities.allowFlying = mayFly;
         player.sendPlayerAbilities();
-    }
-
-    @SubscribeEvent
-    public void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-        ItemMagicFeather.playerData.clear();
     }
 
     @SubscribeEvent
@@ -109,13 +82,9 @@ public class ItemMagicFeather extends Item {
 
         EntityPlayer player = event.player;
 
-        if(oldPlayerDimension != player.dimension) {
-            oldPlayerDimension = player.dimension;
-            ItemMagicFeather.playerData.clear();
-        }
-
         MagicFeatherData data = ItemMagicFeather.playerData.get(player);
-        if (data == null) {
+        // if the player instance changes, we have to rebuild this.
+        if (data == null || data.player != player) {
             data = new MagicFeatherData(player);
             ItemMagicFeather.playerData.put(player, data);
         }
@@ -136,7 +105,8 @@ public class ItemMagicFeather extends Item {
 
     private static class MagicFeatherData {
         private final EntityPlayer player;
-        private boolean hasItem = false;
+        private boolean isSoftLanding = false;
+        private boolean wasGrantedFlight = false;
 
         private int checkTick = 0;
         private boolean beaconInRangeCache;
@@ -151,40 +121,51 @@ public class ItemMagicFeather extends Item {
                 return;
             }
 
-
             boolean hasItem = hasItem(player, ModItems.magicFeather);
-
-            if (hasItem != this.hasItem) {
-                if (hasItem) {
-                    this.onAdd();
-                }
-
-                if (!hasItem) {
-                    this.onRemove();
-                }
-
-                this.hasItem = hasItem;
-                return;
-            }
-
             boolean mayFly = player.capabilities.isCreativeMode || (hasItem && checkBeaconInRange(player));
-            setMayFly(player, mayFly);
-        }
 
-        private void onAdd() {
-            if (!BeaconRangeCalculator.isInBeaconRange(player)) {
-                return;
+            if (mayFly) {
+                setMayFly(player, true);
+                isSoftLanding = false;
+            } else {
+                // we only remove the fly ability if we are the one who granted it.
+                if (wasGrantedFlight) {
+                    System.out.println("wasGrantedFlight");
+                    isSoftLanding = true;
+                }
             }
 
-            setMayFly(player, true);
-        }
-
-        private void onRemove() {
-            if (player.capabilities.isCreativeMode) {
-                return;
+            if (isSoftLanding) {
+                if (this.softLand()) {
+                    System.out.println("softLand");
+                    isSoftLanding = false;
+                }
             }
 
-            setMayFly(player, false);
+            wasGrantedFlight = mayFly;
+        }
+
+        private boolean softLand() {
+            // SOFT LANDING:
+            // on item removal, we disable flying until the player hits the ground
+            // and only then do we remove the creative flight ability
+
+            boolean isPlayerOnGround = player.onGround && player.fallDistance < 1F;
+
+            if (isPlayerOnGround) {
+                setMayFly(player, false);
+
+                // softland complete
+                return true;
+            } else {
+                if (player.capabilities.isFlying) {
+                    player.capabilities.isFlying = false;
+                    player.sendPlayerAbilities();
+                }
+
+                // softland in progress
+                return false;
+            }
         }
 
         private boolean checkBeaconInRange(EntityPlayer player) {
