@@ -1,111 +1,67 @@
 package be.ephys.magicfeather;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
+
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.WeakHashMap;
 
-import baubles.api.BaubleType;
-import baubles.api.BaublesApi;
-import baubles.api.IBauble;
-import be.ephys.cookiecore.config.Config;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Optional;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
-
-@Optional.Interface (iface = "baubles.api.IBauble", modid = "baubles")
-public class ItemMagicFeather extends Item implements IBauble {
+public class ItemMagicFeather extends Item {
 
     public static final String NAME = "magicfeather";
-    private static final WeakHashMap<EntityPlayer, MagicFeatherData> playerData = new WeakHashMap<>();
+    private static final WeakHashMap<PlayerEntity, MagicFeatherData> playerData = new WeakHashMap<>();
 
-    @Config(category = "baubles_compat", description = "In which bauble slot can the magic feather be put?")
-    public static BaubleType baubleType = BaubleType.CHARM;
+//    @Config(category = "baubles_compat", description = "In which bauble slot can the magic feather be put?")
+//    public static BaubleType baubleType = BaubleType.CHARM;
 
     public ItemMagicFeather() {
-        super();
+        super(
+          new Item.Properties()
+            .maxStackSize(1)
+            .group(ItemGroup.TRANSPORTATION)
+        );
 
-        setMaxStackSize(1);
-        setUnlocalizedName(MagicFeatherMod.MODID + ":" + NAME);
         setRegistryName(NAME);
-        setCreativeTab(CreativeTabs.MISC);
     }
 
     public int getEntityLifespan(ItemStack itemStack, World world) {
         return Integer.MAX_VALUE;
     }
 
-    @Override
-    @SideOnly(Side.CLIENT)
-    public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-        super.addInformation(stack, worldIn, tooltip, flagIn);
+    private static void setMayFly(PlayerEntity player, boolean mayFly) {
 
-        EntityPlayer player = Minecraft.getMinecraft().player;
-        if (player != null) {
-            if (!BeaconRangeCalculator.isInBeaconRange(player)) {
-                tooltip.add(I18n.format("magicfeather.gui.out_of_beacon_range"));
-            }
+        if (player.abilities.allowFlying == mayFly) {
+            return;
         }
-    }
 
-    @SideOnly(Side.CLIENT)
-    public void registerModel() {
-        ModelLoader.setCustomModelResourceLocation(this, 0, new ModelResourceLocation(getRegistryName(), "inventory"));
+        player.abilities.allowFlying = mayFly;
+        player.sendPlayerAbilities();
     }
 
     public boolean hasCustomEntity(ItemStack stack) {
         return true;
     }
 
-    public Entity createEntity(World world, Entity entity, ItemStack itemstack) {
-        entity.setEntityInvulnerable(true);
-
-        return null;
-    }
-
-    private static void setMayFly(EntityPlayer player, boolean mayFly) {
-        if (player.capabilities.allowFlying == mayFly) {
-            return;
-        }
-
-        player.capabilities.allowFlying = mayFly;
-        player.sendPlayerAbilities();
-    }
-
-    @SubscribeEvent
-    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.side != Side.SERVER) {
-            return;
-        }
-
-        EntityPlayer player = event.player;
-
-        MagicFeatherData data = ItemMagicFeather.playerData.get(player);
-        // if the player instance changes, we have to rebuild this.
-        if (data == null || data.player != player) {
-            data = new MagicFeatherData(player);
-            ItemMagicFeather.playerData.put(player, data);
-        }
-
-        data.onTick();
-    }
-
-    private static boolean hasItem(EntityPlayer player, Item item) {
-        if (Loader.isModLoaded("baubles") && BaublesApi.isBaubleEquipped(player, item) != -1) {
-            return true;
-        }
+    private static boolean hasItem(PlayerEntity player, Item item) {
+//        if (Loader.isModLoaded("baubles") && BaublesApi.isBaubleEquipped(player, item) != -1) {
+//            return true;
+//        }
 
         for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
             ItemStack stack = player.inventory.getStackInSlot(i);
@@ -117,24 +73,57 @@ public class ItemMagicFeather extends Item implements IBauble {
         return false;
     }
 
-    /* <IBauble> */
     @Override
-    public baubles.api.BaubleType getBaubleType(ItemStack itemstack) {
-        return ItemMagicFeather.baubleType;
+    @OnlyIn(Dist.CLIENT)
+    public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+        super.addInformation(stack, worldIn, tooltip, flagIn);
+
+        PlayerEntity player = Minecraft.getInstance().player;
+        if (player != null) {
+            if (!BeaconRangeCalculator.isInBeaconRange(player)) {
+                tooltip.add(
+                  new TranslationTextComponent(getTranslationKey(stack) + ".tooltip.out_of_beacon_range")
+                    .setStyle(new Style().setColor(TextFormatting.GRAY))
+                );
+            }
+        }
     }
-    /* </IBauble> */
+
+    public Entity createEntity(World world, Entity entity, ItemStack itemstack) {
+        entity.setInvulnerable(true);
+
+        return null;
+    }
+
+    @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.side != LogicalSide.SERVER) {
+            return;
+        }
+
+        PlayerEntity player = event.player;
+
+        MagicFeatherData data = ItemMagicFeather.playerData.get(player);
+        // if the player instance changes, we have to rebuild this.
+        if (data == null || data.player != player) {
+            data = new MagicFeatherData(player);
+            ItemMagicFeather.playerData.put(player, data);
+        }
+
+        data.onTick();
+    }
 
     private static class MagicFeatherData {
-        private final EntityPlayer player;
+        private final PlayerEntity player;
         private boolean isSoftLanding = false;
         private boolean wasGrantedFlight = false;
 
         private int checkTick = 0;
         private boolean beaconInRangeCache;
 
-        public MagicFeatherData(EntityPlayer player) {
+        public MagicFeatherData(PlayerEntity player) {
             this.player = player;
-            this.beaconInRangeCache = player.capabilities.allowFlying;
+            this.beaconInRangeCache = player.abilities.allowFlying;
         }
 
         public void onTick() {
@@ -143,7 +132,7 @@ public class ItemMagicFeather extends Item implements IBauble {
             }
 
             boolean hasItem = hasItem(player, ModItems.magicFeather);
-            boolean mayFly = player.capabilities.isCreativeMode || (hasItem && checkBeaconInRange(player));
+            boolean mayFly = player.abilities.isCreativeMode || (hasItem && checkBeaconInRange(player));
 
             if (mayFly) {
                 setMayFly(player, true);
@@ -179,8 +168,8 @@ public class ItemMagicFeather extends Item implements IBauble {
                 // softland complete
                 return true;
             } else {
-                if (player.capabilities.isFlying) {
-                    player.capabilities.isFlying = false;
+                if (player.abilities.isFlying) {
+                    player.abilities.isFlying = false;
                     player.sendPlayerAbilities();
                 }
 
@@ -189,7 +178,7 @@ public class ItemMagicFeather extends Item implements IBauble {
             }
         }
 
-        private boolean checkBeaconInRange(EntityPlayer player) {
+        private boolean checkBeaconInRange(PlayerEntity player) {
 
             if (checkTick++ % 40 != 0) {
                 return beaconInRangeCache;

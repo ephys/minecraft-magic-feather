@@ -1,12 +1,13 @@
 package be.ephys.magicfeather;
 
+import be.ephys.cookiecore.config.Config;
 import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.BeaconTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
 
@@ -26,18 +27,25 @@ public final class BeaconRangeCalculator {
         }
     }
 
-    @Config(category = "range_computation", description = "How the beacon range is calculated vertically. Java = Vanilla Java Behavior. Bedrock = Vanilla Bedrock behavior. FullHeight = expand vertical range to maximum")
-    public static BeaconVerticalRangeType verticalRangeType = BeaconVerticalRangeType.FullHeight;
+    @Config(name = "range_computation.vertical_range_type", description = "How the beacon range is calculated vertically. Java = Vanilla Java Behavior. Bedrock = Vanilla Bedrock behavior. FullHeight = expand vertical range to maximum")
+    @Config.EnumDefault(value = "FullHeight", enumType = BeaconVerticalRangeType.class)
+    public static ForgeConfigSpec.EnumValue<BeaconVerticalRangeType> verticalRangeType;
 
-    @Config(category = "range_computation", description = "What is the beacon base range?")
-    public static int baseRange = 10;
+    @Config(name = "range_computation.base_range", description = "What is the beacon base range?")
+    @Config.IntDefault(10)
+    public static ForgeConfigSpec.IntValue baseRange;
 
-    @Config(category = "range_computation", description = "How many blocks are added to the range per level?")
-    public static int rangeStep = 10;
+    @Config(name = "range_computation.range_step", description = "How many blocks are added to the range per level?")
+    @Config.IntDefault(10)
+    public static ForgeConfigSpec.IntValue rangeStep;
 
     public static boolean isInBeaconRange(Entity entity) {
         World world = entity.getEntityWorld();
         Vec3d entityPos = entity.getPositionVec();
+
+        int rangeStep = BeaconRangeCalculator.rangeStep.get();
+        int baseRange = BeaconRangeCalculator.baseRange.get();
+        BeaconVerticalRangeType verticalRangeType = BeaconRangeCalculator.verticalRangeType.get();
 
         List<TileEntity> tileEntities = world.loadedTileEntityList;
         for (TileEntity t : tileEntities) {

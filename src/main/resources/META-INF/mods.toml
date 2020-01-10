@@ -22,7 +22,7 @@ displayName="Magic Feather" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 displayURL="https://www.curseforge.com/minecraft/mc-mods/magic-feather"
 # A file name (in the root of the mod JAR) containing a logo for display
-logoFile="assets/magicfeather/textures/logo.png"
+logoFile="logo.png"
 # A text field displayed in the mod UI
 credits="RWTema for the original angel ring"
 # A text field displayed in the mod UI
@@ -38,11 +38,17 @@ to use alternative methods of travel when exploring.
     modId="forge"
     mandatory=true
     versionRange="[30,)"
-    ordering="NONE"
+    ordering="AFTER"
     side="BOTH"
 [[dependencies.magicfeather]]
     modId="minecraft"
     mandatory=true
     versionRange="[1.15.1]"
     ordering="NONE"
+    side="BOTH"
+[[dependencies.magicfeather]]
+    modId="cookiecore"
+    mandatory=true
+    versionRange="[2.1.0,)"
+    ordering="AFTER"
     side="BOTH"
