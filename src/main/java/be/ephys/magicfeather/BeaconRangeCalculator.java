@@ -1,11 +1,12 @@
 package be.ephys.magicfeather;
 
-import be.ephys.cookiecore.config.Config;
 import net.minecraft.entity.Entity;
+import net.minecraft.tileentity.BeaconTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityBeacon;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import net.minecraftforge.common.config.Config;
 
 import java.util.List;
 
@@ -13,7 +14,6 @@ public final class BeaconRangeCalculator {
 
     public enum BeaconVerticalRangeType {
         Java(0, 256),
-        Bedrock(0, 0),
         FullHeight(0, 0);
 
         private final int downRangeExtension;
@@ -37,16 +37,17 @@ public final class BeaconRangeCalculator {
 
     public static boolean isInBeaconRange(Entity entity) {
         World world = entity.getEntityWorld();
+        Vec3d entityPos = entity.getPositionVec();
 
         List<TileEntity> tileEntities = world.loadedTileEntityList;
         for (TileEntity t : tileEntities) {
-            if (!(t instanceof TileEntityBeacon)) {
+            if (!(t instanceof BeaconTileEntity)) {
                 continue;
             }
 
-            TileEntityBeacon beacon = (TileEntityBeacon) t;
+            BeaconTileEntity beacon = (BeaconTileEntity) t;
 
-            int level = beacon.getField(0);
+            int level = beacon.getLevels();
             int radius = (level * rangeStep + baseRange);
 
             BlockPos pos = beacon.getPos();
@@ -54,17 +55,17 @@ public final class BeaconRangeCalculator {
             int y = pos.getY();
             int z = pos.getZ();
 
-            if (entity.posX < (x - radius) || entity.posX > (x + radius)) {
+            if (entityPos.x < (x - radius) || entityPos.x > (x + radius)) {
                 continue;
             }
 
-            if (entity.posZ < (z - radius) || entity.posZ > (z + radius)) {
+            if (entityPos.z < (z - radius) || entityPos.z > (z + radius)) {
                 continue;
             }
 
             if (verticalRangeType != BeaconVerticalRangeType.FullHeight) {
-                if (entity.posY < (y - radius - verticalRangeType.downRangeExtension)
-                    || entity.posY > (y + radius + verticalRangeType.upRangeExtension)) {
+                if (entityPos.y < (y - radius - verticalRangeType.downRangeExtension)
+                    || entityPos.y > (y + radius + verticalRangeType.upRangeExtension)) {
                     continue;
                 }
             }

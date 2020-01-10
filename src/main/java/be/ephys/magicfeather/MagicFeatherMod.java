@@ -7,17 +7,9 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(
-        modid = MagicFeatherMod.MODID,
-        version = MagicFeatherMod.VERSION,
-        name = MagicFeatherMod.NAME,
-        dependencies="required-after:cookiecore@[2.0.0,);",
-        certificateFingerprint = "@FINGERPRINT@"
-)
+@Mod(MagicFeatherMod.MODID)
 public class MagicFeatherMod {
     public static final String MODID = "magicfeather";
-    public static final String VERSION = "@VERSION@";
-    public static final String NAME = "Magic Feather";
 
     @Mod.Instance
     public static MagicFeatherMod instance;
