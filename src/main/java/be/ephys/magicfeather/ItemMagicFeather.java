@@ -15,7 +15,6 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 
 import javax.annotation.Nullable;
@@ -95,7 +94,6 @@ public class ItemMagicFeather extends Item {
         return null;
     }
 
-    @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side != LogicalSide.SERVER) {
             return;
@@ -140,14 +138,12 @@ public class ItemMagicFeather extends Item {
             } else {
                 // we only remove the fly ability if we are the one who granted it.
                 if (wasGrantedFlight) {
-                    System.out.println("wasGrantedFlight");
                     isSoftLanding = true;
                 }
             }
 
             if (isSoftLanding) {
                 if (this.softLand()) {
-                    System.out.println("softLand");
                     isSoftLanding = false;
                 }
             }

@@ -15,6 +15,6 @@ public class ModItems {
       magicFeather = new ItemMagicFeather();
 
       event.getRegistry().register(magicFeather);
-      MinecraftForge.EVENT_BUS.register(ModItems.magicFeather);
+      MinecraftForge.EVENT_BUS.addListener(ModItems.magicFeather::onPlayerTick);
     }
 }
