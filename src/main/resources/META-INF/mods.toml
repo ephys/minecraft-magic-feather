@@ -37,18 +37,18 @@ to use alternative methods of travel when exploring.
 [[dependencies.magicfeather]]
     modId="forge"
     mandatory=true
-    versionRange="[30,)"
+    versionRange="[31,)"
     ordering="AFTER"
     side="BOTH"
 [[dependencies.magicfeather]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.1,)"
+    versionRange="[1.15.2,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.magicfeather]]
     modId="cookiecore"
     mandatory=true
-    versionRange="[1.15.1-2.1.0,)"
+    versionRange="[1.15.2-2.1.2,)"
     ordering="AFTER"
     side="BOTH"

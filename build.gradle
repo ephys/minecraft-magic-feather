@@ -102,7 +102,7 @@ dependencies {
     minecraft "net.minecraftforge:forge:${forge_version}"
 
     // https://github.com/Ephys/CookieCore/packages/102415
-    compile 'be.ephys.cookiecore:cookiecore:1.15.1-2.1.1-49bed832'
+    compile 'be.ephys.cookiecore:cookiecore:1.15.2-2.1.2-37c53437'
 }
 
 import org.ajoberstar.grgit.Grgit
