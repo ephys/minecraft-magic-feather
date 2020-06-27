@@ -43,7 +43,7 @@ to use alternative methods of travel when exploring.
 [[dependencies.magicfeather]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.1]"
+    versionRange="[1.15.1,)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.magicfeather]]
