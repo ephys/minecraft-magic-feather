@@ -1,5 +1,6 @@
 package be.ephys.magicfeather;
 
+import be.ephys.cookiecore.config.Config;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
@@ -11,8 +12,11 @@ import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.ModList;
+import top.theillusivec4.curios.api.CuriosApi;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -23,8 +27,9 @@ public class ItemMagicFeather extends Item {
     public static final String NAME = "magicfeather";
     private static final WeakHashMap<PlayerEntity, MagicFeatherData> playerData = new WeakHashMap<>();
 
-//    @Config(category = "baubles_compat", description = "In which bauble slot can the magic feather be put?")
-//    public static BaubleType baubleType = BaubleType.CHARM;
+    @Config(name = "item.requires_curios", description = "If curios is installed, the magic feather will need to be installed in its charm slot to function.")
+    @Config.BooleanDefault(value = true)
+    public static ForgeConfigSpec.BooleanValue looseRequiresCurios;
 
     public ItemMagicFeather() {
         super(
@@ -54,10 +59,29 @@ public class ItemMagicFeather extends Item {
         return true;
     }
 
+    private static boolean requiresCurios() {
+        return isCuriosInstalled() && looseRequiresCurios.get();
+    }
+
+    private static boolean isCuriosInstalled() {
+        return ModList.get().isLoaded("curios");
+    }
+
+    private static boolean isCuriosEquipped(PlayerEntity player, Item item) {
+        return CuriosApi.getCuriosHelper().findEquippedCurio(item, player).isPresent();
+    }
+
     private static boolean hasItem(PlayerEntity player, Item item) {
-//        if (Loader.isModLoaded("baubles") && BaublesApi.isBaubleEquipped(player, item) != -1) {
-//            return true;
-//        }
+        if (isCuriosInstalled()) {
+            if (isCuriosEquipped(player, item)) {
+                return true;
+            }
+
+            // if requireCurios is false, we'll check the main inventory
+            if (looseRequiresCurios.get()) {
+                return false;
+            }
+        }
 
         for (int i = 0; i < player.inventory.getSizeInventory(); i++) {
             ItemStack stack = player.inventory.getStackInSlot(i);
@@ -76,6 +100,13 @@ public class ItemMagicFeather extends Item {
 
         PlayerEntity player = Minecraft.getInstance().player;
         if (player != null) {
+            if (requiresCurios() && !isCuriosEquipped(player, ModItems.magicFeather)) {
+                tooltip.add(
+                  new TranslationTextComponent(getTranslationKey(stack) + ".tooltip.requires_curios")
+                    .func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.GRAY))
+                );
+            }
+
             if (!BeaconRangeCalculator.isInBeaconRange(player)) {
                 tooltip.add(
                   new TranslationTextComponent(getTranslationKey(stack) + ".tooltip.out_of_beacon_range")

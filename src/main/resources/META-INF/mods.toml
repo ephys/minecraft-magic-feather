@@ -52,3 +52,11 @@ to use alternative methods of travel when exploring.
     versionRange="[1.16.2-3.0.0,)"
     ordering="AFTER"
     side="BOTH"
+
+
+[[dependencies.magicfeather]]
+    modId="curios"
+    mandatory=false
+    versionRange="[FORGE-1.16.1-3.0,)"
+    ordering="AFTER"
+    side="BOTH"

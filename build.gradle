@@ -97,6 +97,10 @@ repositories {
             password = project.findProperty("gpr.key") as String ?: System.getenv("GH_MVN_PASSWORD")
         }
     }
+    maven {
+        name "curios"
+        url "https://maven.theillusivec4.top/"
+    }
 }
 
 dependencies {
@@ -104,6 +108,9 @@ dependencies {
 
     // https://github.com/Ephys/CookieCore/packages/102415
     compile fg.deobf('be.ephys.cookiecore:cookiecore:1.16.2-3.0.0-4d69840d')
+
+    compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.2-4.0.0.0:api")
+    runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:1.16.2-4.0.0.0")
 }
 
 import org.ajoberstar.grgit.Grgit
