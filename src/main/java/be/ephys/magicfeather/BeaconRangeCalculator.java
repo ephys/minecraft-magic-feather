@@ -5,7 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.tileentity.BeaconTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeConfigSpec;
 
@@ -41,7 +41,7 @@ public final class BeaconRangeCalculator {
 
     public static boolean isInBeaconRange(Entity entity) {
         World world = entity.getEntityWorld();
-        Vec3d entityPos = entity.getPositionVec();
+        Vector3d entityPos = entity.getPositionVec();
 
         int rangeStep = BeaconRangeCalculator.rangeStep.get();
         int baseRange = BeaconRangeCalculator.baseRange.get();

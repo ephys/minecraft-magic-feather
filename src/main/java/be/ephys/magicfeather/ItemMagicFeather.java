@@ -7,10 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -82,7 +79,7 @@ public class ItemMagicFeather extends Item {
             if (!BeaconRangeCalculator.isInBeaconRange(player)) {
                 tooltip.add(
                   new TranslationTextComponent(getTranslationKey(stack) + ".tooltip.out_of_beacon_range")
-                    .setStyle(new Style().setColor(TextFormatting.GRAY))
+                    .func_230530_a_(Style.field_240709_b_.func_240712_a_(TextFormatting.GRAY))
                 );
             }
         }
@@ -156,7 +153,8 @@ public class ItemMagicFeather extends Item {
             // on item removal, we disable flying until the player hits the ground
             // and only then do we remove the creative flight ability
 
-            boolean isPlayerOnGround = player.onGround && player.fallDistance < 1F;
+            // func_233570_aj_ = player.isOnGround()
+            boolean isPlayerOnGround = player.func_233570_aj_() && player.fallDistance < 1F;
 
             if (isPlayerOnGround) {
                 setMayFly(player, false);
