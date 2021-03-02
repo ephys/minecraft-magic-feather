@@ -12,18 +12,18 @@ import top.theillusivec4.curios.api.SlotTypePreset;
 
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = MagicFeatherMod.MODID)
 public class ModItems {
-    public static ItemMagicFeather magicFeather;
+  public static ItemMagicFeather magicFeather;
 
-    @SubscribeEvent
-    public static void registerItems(RegistryEvent.Register<Item> event) {
-      magicFeather = new ItemMagicFeather();
+  @SubscribeEvent
+  public static void registerItems(RegistryEvent.Register<Item> event) {
+    magicFeather = new ItemMagicFeather();
 
-      event.getRegistry().register(magicFeather);
-      MinecraftForge.EVENT_BUS.addListener(ModItems.magicFeather::onPlayerTick);
-    }
+    event.getRegistry().register(magicFeather);
+    MinecraftForge.EVENT_BUS.addListener(ModItems.magicFeather::onPlayerTick);
+  }
 
-    @SubscribeEvent
-    public static void sendInterComms(InterModEnqueueEvent event) {
-      InterModComms.sendTo("curios", SlotTypeMessage.REGISTER_TYPE, () -> SlotTypePreset.CHARM.getMessageBuilder().build());
-    }
+  @SubscribeEvent
+  public static void sendInterComms(InterModEnqueueEvent event) {
+    InterModComms.sendTo("curios", SlotTypeMessage.REGISTER_TYPE, () -> SlotTypePreset.CHARM.getMessageBuilder().build());
+  }
 }

@@ -10,6 +10,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.List;
+import java.util.WeakHashMap;
 
 public final class BeaconRangeCalculator {
 
@@ -21,7 +22,6 @@ public final class BeaconRangeCalculator {
         private final int upRangeExtension;
 
         BeaconVerticalRangeType(int downRangeExtension, int upRangeExtension) {
-
             this.downRangeExtension = downRangeExtension;
             this.upRangeExtension = upRangeExtension;
         }
@@ -39,26 +39,27 @@ public final class BeaconRangeCalculator {
     @Config.IntDefault(10)
     public static ForgeConfigSpec.IntValue rangeStep;
 
+    private static final WeakHashMap<Class<? extends TileEntity>, BeaconTypeHandler> beaconHandlers = new WeakHashMap<>();
+
+    public static void registerBeaconType(BeaconTypeHandler data) {
+        beaconHandlers.put(data.getTargetClass(), data);
+    }
+
     public static boolean isInBeaconRange(Entity entity) {
         World world = entity.getEntityWorld();
         Vector3d entityPos = entity.getPositionVec();
 
-        int rangeStep = BeaconRangeCalculator.rangeStep.get();
-        int baseRange = BeaconRangeCalculator.baseRange.get();
         BeaconVerticalRangeType verticalRangeType = BeaconRangeCalculator.verticalRangeType.get();
 
         List<TileEntity> tileEntities = world.loadedTileEntityList;
         for (TileEntity t : tileEntities) {
-            if (!(t instanceof BeaconTileEntity)) {
+            int radius = getBeaconRange(t);
+
+            if (radius == 0) {
                 continue;
             }
 
-            BeaconTileEntity beacon = (BeaconTileEntity) t;
-
-            int level = beacon.getLevels();
-            int radius = (level * rangeStep + baseRange);
-
-            BlockPos pos = beacon.getPos();
+            BlockPos pos = t.getPos();
             int x = pos.getX();
             int y = pos.getY();
             int z = pos.getZ();
@@ -82,5 +83,27 @@ public final class BeaconRangeCalculator {
         }
 
         return false;
+    }
+
+    private static int getBeaconRange(TileEntity te) {
+        Class<?> classObj = te.getClass();
+        BeaconTypeHandler handler = beaconHandlers.get(classObj);
+        if (handler != null) {
+            return handler.getFlightRangeAroundBeacon(te);
+        }
+
+        if (!(te instanceof BeaconTileEntity)) {
+            return 0;
+        }
+
+        int rangeStep = BeaconRangeCalculator.rangeStep.get();
+        int baseRange = BeaconRangeCalculator.baseRange.get();
+
+        BeaconTileEntity beacon = (BeaconTileEntity) te;
+
+        int level = beacon.getLevels();
+        int radius = (level * rangeStep + baseRange);
+
+        return radius;
     }
 }
