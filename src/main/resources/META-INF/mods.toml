@@ -1,11 +1,11 @@
 modLoader="javafml"
-loaderVersion="[33,)"
+loaderVersion="[40,)"
 license="MIT"
 issueTrackerURL="https://github.com/Ephys/minecraft-magic-feather/issues"
 
 [[mods]]
 modId="magicfeather"
-version="${jarVersion}"
+version="${file.jarVersion}"
 displayName="Magic Feather"
 updateJSONURL="https://mc-curse-update-checker.herokuapp.com/284745"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/magic-feather"
@@ -21,19 +21,19 @@ to use alternative methods of travel when exploring.
 [[dependencies.magicfeather]]
     modId="forge"
     mandatory=true
-    versionRange="[33,)"
+    versionRange="[40,)"
     ordering="AFTER"
     side="BOTH"
 [[dependencies.magicfeather]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16,)"
+    versionRange="[1.18.2,1.19)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.magicfeather]]
     modId="cookiecore"
     mandatory=true
-    versionRange="[1.16.2-3.0.0,)"
+    versionRange="[1.18.2-4.0.0,)"
     ordering="AFTER"
     side="BOTH"
 
@@ -41,6 +41,6 @@ to use alternative methods of travel when exploring.
 [[dependencies.magicfeather]]
     modId="curios"
     mandatory=false
-    versionRange="[FORGE-1.16.1-3.0,)"
+    versionRange="[1.18.2-5.0.7.1,)"
     ordering="AFTER"
     side="BOTH"

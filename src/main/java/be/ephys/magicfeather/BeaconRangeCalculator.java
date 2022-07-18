@@ -1,109 +1,127 @@
 package be.ephys.magicfeather;
 
 import be.ephys.cookiecore.config.Config;
-import net.minecraft.entity.Entity;
-import net.minecraft.tileentity.BeaconTileEntity;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
+import net.minecraft.world.level.block.entity.BeaconBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeConfigSpec;
 
-import java.util.List;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 public final class BeaconRangeCalculator {
 
-    public enum BeaconVerticalRangeType {
-        Java(0, 256),
-        FullHeight(0, 0);
+  public enum BeaconVerticalRangeType {
+    Java(0, 256),
+    FullHeight(0, 0);
 
-        private final int downRangeExtension;
-        private final int upRangeExtension;
+    private final int downRangeExtension;
+    private final int upRangeExtension;
 
-        BeaconVerticalRangeType(int downRangeExtension, int upRangeExtension) {
-            this.downRangeExtension = downRangeExtension;
-            this.upRangeExtension = upRangeExtension;
-        }
+    BeaconVerticalRangeType(int downRangeExtension, int upRangeExtension) {
+      this.downRangeExtension = downRangeExtension;
+      this.upRangeExtension = upRangeExtension;
     }
+  }
 
-    @Config(name = "range_computation.vertical_range_type", description = "How the beacon range is calculated vertically. Java = Vanilla Java Behavior. Bedrock = Vanilla Bedrock behavior. FullHeight = expand vertical range to maximum")
-    @Config.EnumDefault(value = "FullHeight", enumType = BeaconVerticalRangeType.class)
-    public static ForgeConfigSpec.EnumValue<BeaconVerticalRangeType> verticalRangeType;
+  @Config(name = "range_computation.vertical_range_type", description = "How the beacon range is calculated vertically. Java = Vanilla Java Behavior. Bedrock = Vanilla Bedrock behavior. FullHeight = expand vertical range to maximum")
+  @Config.EnumDefault(value = "FullHeight", enumType = BeaconVerticalRangeType.class)
+  public static ForgeConfigSpec.EnumValue<BeaconVerticalRangeType> verticalRangeType;
 
-    @Config(name = "range_computation.base_range", description = "What is the beacon base range?")
-    @Config.IntDefault(10)
-    public static ForgeConfigSpec.IntValue baseRange;
+  @Config(name = "range_computation.base_range", description = "What is the beacon base range?")
+  @Config.IntDefault(10)
+  public static ForgeConfigSpec.IntValue baseRange;
 
-    @Config(name = "range_computation.range_step", description = "How many blocks are added to the range per level?")
-    @Config.IntDefault(10)
-    public static ForgeConfigSpec.IntValue rangeStep;
+  @Config(name = "range_computation.range_step", description = "How many blocks are added to the range per level?")
+  @Config.IntDefault(10)
+  public static ForgeConfigSpec.IntValue rangeStep;
 
-    private static final WeakHashMap<Class<? extends TileEntity>, BeaconTypeHandler> beaconHandlers = new WeakHashMap<>();
+  private static final WeakHashMap<Class<? extends BlockEntity>, BeaconTypeHandler> beaconHandlers = new WeakHashMap<>();
 
-    public static void registerBeaconType(BeaconTypeHandler data) {
-        beaconHandlers.put(data.getTargetClass(), data);
-    }
+  public static void registerBeaconType(BeaconTypeHandler data) {
+    beaconHandlers.put(data.getTargetClass(), data);
+  }
 
-    public static boolean isInBeaconRange(Entity entity) {
-        World world = entity.getEntityWorld();
-        Vector3d entityPos = entity.getPositionVec();
+  public static boolean isInBeaconRange(Entity entity) {
+    ServerLevel world = (ServerLevel) entity.getLevel();
+    Vec3 entityPos = entity.getEyePosition();
 
-        BeaconVerticalRangeType verticalRangeType = BeaconRangeCalculator.verticalRangeType.get();
+    BeaconVerticalRangeType verticalRangeType = BeaconRangeCalculator.verticalRangeType.get();
 
-        List<TileEntity> tileEntities = world.loadedTileEntityList;
-        for (TileEntity t : tileEntities) {
-            int radius = getBeaconRange(t);
+    PoiManager poiManager = world.getPoiManager();
 
-            if (radius == 0) {
-                continue;
-            }
+    int maxRange = getRangeForLevel(6);
 
-            BlockPos pos = t.getPos();
-            int x = pos.getX();
-            int y = pos.getY();
-            int z = pos.getZ();
+    Optional<BlockPos> foundBeaconPos = poiManager.find(
+      MagicFeatherMod.BEACON_POI.get().getPredicate(),
+      (pos) -> {
+        BlockEntity blockEntityAtPos = world.getBlockEntity(pos);
 
-            if (entityPos.x < (x - radius) || entityPos.x > (x + radius)) {
-                continue;
-            }
-
-            if (entityPos.z < (z - radius) || entityPos.z > (z + radius)) {
-                continue;
-            }
-
-            if (verticalRangeType != BeaconVerticalRangeType.FullHeight) {
-                if (entityPos.y < (y - radius - verticalRangeType.downRangeExtension)
-                    || entityPos.y > (y + radius + verticalRangeType.upRangeExtension)) {
-                    continue;
-                }
-            }
-
-            return true;
+        if (!(blockEntityAtPos instanceof BeaconBlockEntity)) {
+          return false;
         }
 
-        return false;
-    }
-
-    private static int getBeaconRange(TileEntity te) {
-        Class<?> classObj = te.getClass();
-        BeaconTypeHandler handler = beaconHandlers.get(classObj);
-        if (handler != null) {
-            return handler.getFlightRangeAroundBeacon(te);
+        int radius = getBeaconRange(blockEntityAtPos);
+        if (radius == 0) {
+          return false;
         }
 
-        if (!(te instanceof BeaconTileEntity)) {
-            return 0;
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
+        if (entityPos.x < (x - radius) || entityPos.x > (x + radius)) {
+          return false;
         }
 
-        int rangeStep = BeaconRangeCalculator.rangeStep.get();
-        int baseRange = BeaconRangeCalculator.baseRange.get();
+        if (entityPos.z < (z - radius) || entityPos.z > (z + radius)) {
+          return false;
+        }
 
-        BeaconTileEntity beacon = (BeaconTileEntity) te;
+        if (verticalRangeType != BeaconVerticalRangeType.FullHeight) {
+          if (entityPos.y < (y - radius - verticalRangeType.downRangeExtension)
+            || entityPos.y > (y + radius + verticalRangeType.upRangeExtension)) {
+            return false;
+          }
+        }
 
-        int level = beacon.getLevels();
-        int radius = (level * rangeStep + baseRange);
+        return true;
+      },
+      entity.blockPosition(),
+      maxRange,
+      PoiManager.Occupancy.ANY
+    );
 
-        return radius;
+    return foundBeaconPos.isPresent();
+  }
+
+  private static int getRangeForLevel(int level) {
+    return baseRange.get() + (level * rangeStep.get());
+  }
+
+  private static int getBeaconRange(BlockEntity te) {
+    Class<?> classObj = te.getClass();
+    BeaconTypeHandler handler = beaconHandlers.get(classObj);
+    if (handler != null) {
+      return handler.getFlightRangeAroundBeacon(te);
     }
+
+    if (!(te instanceof BeaconBlockEntity)) {
+      return 0;
+    }
+
+    BeaconBlockEntity beacon = (BeaconBlockEntity) te;
+    // beacon is disabled
+    if (beacon.beamSections.isEmpty()) {
+      return 0;
+    }
+
+    int level = beacon.levels;
+
+    return getRangeForLevel(level);
+  }
 }

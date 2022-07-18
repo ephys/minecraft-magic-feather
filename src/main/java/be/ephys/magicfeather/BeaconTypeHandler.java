@@ -1,8 +1,9 @@
 package be.ephys.magicfeather;
 
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public interface BeaconTypeHandler {
-  Class<? extends TileEntity> getTargetClass();
-  int getFlightRangeAroundBeacon(TileEntity beacon);
+  Class<? extends BlockEntity> getTargetClass();
+
+  int getFlightRangeAroundBeacon(BlockEntity beacon);
 }
