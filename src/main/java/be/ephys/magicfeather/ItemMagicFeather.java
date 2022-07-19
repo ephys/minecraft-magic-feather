@@ -6,6 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
@@ -188,22 +190,18 @@ public class ItemMagicFeather extends Item {
       // on item removal, we disable flying until the player hits the ground
       // and only then do we remove the creative flight ability
 
+      player.getAbilities().flying = false;
+      player.getAbilities().mayfly = false;
+      player.onUpdateAbilities();
+
       boolean isPlayerOnGround = player.isOnGround() && player.fallDistance < 1F;
-
-      if (isPlayerOnGround) {
-        setMayFly(player, false);
-
-        // softland complete
-        return true;
-      } else {
-        if (player.getAbilities().flying) {
-          player.getAbilities().flying = false;
-          player.onUpdateAbilities();
+      if (!isPlayerOnGround) {
+        if (checkTick++ % 20 != 0) {
+          player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false));
         }
-
-        // softland in progress
-        return false;
       }
+
+      return isPlayerOnGround;
     }
 
     private boolean checkBeaconInRange(Player player) {
