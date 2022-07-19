@@ -121,6 +121,9 @@ public final class BeaconRangeCalculator {
     }
 
     int level = beacon.levels;
+    if (level == 0) {
+      return 0;
+    }
 
     return getRangeForLevel(level);
   }
