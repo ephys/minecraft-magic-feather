@@ -122,13 +122,10 @@ public class ItemMagicFeather extends Item {
         );
       }
 
-      // TODO
-//      if (!BeaconRangeCalculator.isInBeaconRange(player)) {
-//        tooltip.add(
-//          new TranslatableComponent(getDescriptionId(stack) + ".tooltip.out_of_beacon_range")
-//            .withStyle(Style.EMPTY.withColor(ChatFormatting.GRAY))
-//        );
-//      }
+      tooltip.add(
+        new TranslatableComponent(getDescriptionId(stack) + ".tooltip.description")
+          .withStyle(Style.EMPTY.withColor(ChatFormatting.GRAY))
+      );
     }
   }
 
