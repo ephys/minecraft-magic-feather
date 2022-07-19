@@ -57,7 +57,7 @@ public final class BeaconRangeCalculator {
     int maxRange = getRangeForLevel(6);
 
     Optional<BlockPos> foundBeaconPos = poiManager.find(
-      MagicFeatherMod.BEACON_POI.get().getPredicate(),
+      MagicFeatherMod.getBeaconPoi().getPredicate(),
       (pos) -> {
         BlockEntity blockEntityAtPos = world.getBlockEntity(pos);
 

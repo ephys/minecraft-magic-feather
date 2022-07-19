@@ -36,7 +36,11 @@ to use alternative methods of travel when exploring.
     versionRange="[1.18.2-4.0.0,)"
     ordering="AFTER"
     side="BOTH"
-
+[[dependencies.magicfeather]]
+    modId="alexsmobs"
+    mandatory=false
+    ordering="AFTER"
+    versionRange="[1.0.0,)"
 
 [[dependencies.magicfeather]]
     modId="curios"

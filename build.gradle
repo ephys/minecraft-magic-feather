@@ -151,6 +151,9 @@ repositories {
         name "curios"
         url "https://maven.theillusivec4.top/"
     }
+    maven {
+        url "https://www.cursemaven.com"
+    }
 }
 
 dependencies {
