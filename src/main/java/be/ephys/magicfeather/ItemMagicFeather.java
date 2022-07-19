@@ -164,7 +164,7 @@ public class ItemMagicFeather extends Item {
       }
 
       boolean hasItem = hasItem(player, ModItems.magicFeather);
-      boolean mayFly = player.getAbilities().instabuild || (hasItem && checkBeaconInRange(player));
+      boolean mayFly = player.isCreative() || (hasItem && checkBeaconInRange(player));
 
       if (mayFly) {
         setMayFly(player, true);
