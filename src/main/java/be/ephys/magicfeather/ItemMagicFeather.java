@@ -9,6 +9,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -35,6 +36,15 @@ public class ItemMagicFeather extends Item {
   @Config(name = "item.requires_curios", description = "If curios is installed, the magic feather will need to be installed in its charm slot to function.")
   @Config.BooleanDefault(value = true)
   public static ForgeConfigSpec.BooleanValue looseRequiresCurios;
+
+  @Config(name = "too_close_to_the_sun_behavior", description = "When losing the ability to fly, should the player receive a slow fall effect or simply negate the fall damage?")
+  @Config.EnumDefault(value = "NEGATE_FALL_DAMAGE", enumType = FallStyle.class)
+  public static ForgeConfigSpec.EnumValue<FallStyle> fallStyle;
+
+   enum FallStyle {
+    SLOW_FALL,
+    NEGATE_FALL_DAMAGE
+  }
 
   public ItemMagicFeather() {
     super(
@@ -149,6 +159,7 @@ public class ItemMagicFeather extends Item {
     private final Player player;
     private boolean isSoftLanding = false;
     private boolean wasGrantedFlight = false;
+    private boolean isSlowFalling = false;
 
     private int checkTick = 0;
     private boolean beaconInRangeCache;
@@ -186,22 +197,56 @@ public class ItemMagicFeather extends Item {
     }
 
     private boolean softLand() {
+      if (fallStyle.get() == FallStyle.SLOW_FALL) {
+        return this.slowFall();
+      } else {
+        return this.negateFallDamage();
+      }
+    }
+
+    private boolean slowFall() {
       // SOFT LANDING:
       // on item removal, we disable flying until the player hits the ground
       // and only then do we remove the creative flight ability
 
-      player.getAbilities().flying = false;
-      player.getAbilities().mayfly = false;
+      Abilities abilities = player.getAbilities();
+      if (abilities.flying) {
+        this.isSlowFalling = true;
+        abilities.flying = false;
+      }
+
+      abilities.mayfly = false;
       player.onUpdateAbilities();
 
       boolean isPlayerOnGround = player.isOnGround() && player.fallDistance < 1F;
-      if (!isPlayerOnGround) {
-        if (checkTick++ % 20 != 0) {
-          player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 40, 0, false, false));
+      if (isPlayerOnGround) {
+        this.isSlowFalling = false;
+      } else if (this.isSlowFalling) {
+        if (checkTick++ % 5 != 0) {
+          player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 10, 0, false, false));
         }
       }
 
       return isPlayerOnGround;
+    }
+
+    private boolean negateFallDamage() {
+      boolean isPlayerOnGround = player.isOnGround() && player.fallDistance < 1F;
+
+      if (isPlayerOnGround) {
+        setMayFly(player, false);
+
+        // softland complete
+        return true;
+      } else {
+        if (player.getAbilities().flying) {
+          player.getAbilities().flying = false;
+          player.onUpdateAbilities();
+        }
+
+        // softland in progress
+        return false;
+      }
     }
 
     private boolean checkBeaconInRange(Player player) {
