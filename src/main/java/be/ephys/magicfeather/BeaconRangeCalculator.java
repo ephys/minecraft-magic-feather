@@ -43,7 +43,11 @@ public final class BeaconRangeCalculator {
         BeaconVerticalRangeType verticalRangeType = ModConfigFile.verticalRangeType.get();
 
         // vanilla creates a new block entity if one isn't found, this will be problematic here, so use the forge method that doesn't do that and just returns null
-        List<BlockEntity> tickingBlockEntities = ((LevelAccessor) world).getBlockEntityTickers().stream().filter(Predicate.not(TickingBlockEntity::isRemoved)).map(t -> world.getExistingBlockEntity(t.getPos())).filter(Objects::nonNull).toList();
+        List<BlockEntity> tickingBlockEntities = ((LevelAccessor) world).getBlockEntityTickers().stream()
+                .filter(blockEntity -> !blockEntity.isRemoved() && blockEntity.getPos() != null)
+                .map(blockEntity -> world.getExistingBlockEntity(blockEntity.getPos()))
+                .filter(Objects::nonNull)
+                .toList();
 
         for (BlockEntity t : tickingBlockEntities) {
             int radius = getBeaconRange(t);
