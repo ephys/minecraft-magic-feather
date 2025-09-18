@@ -23,9 +23,11 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.type.capability.ICuriosItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 import java.util.WeakHashMap;
 
 @Mod.EventBusSubscriber(modid = MagicFeatherMod.MOD_ID)
@@ -84,7 +86,10 @@ public class ItemMagicFeather extends Item {
       return false;
     }
 
-    return CuriosApi.getCuriosInventory(player).resolve().get().findFirstCurio(item).isPresent();
+    Optional<ICuriosItemHandler> maybeCuriosItemHandler = CuriosApi.getCuriosInventory(player).resolve();
+    return maybeCuriosItemHandler
+      .map(iCuriosItemHandler -> iCuriosItemHandler.findFirstCurio(item).isPresent())
+      .orElse(false);
   }
 
   private static boolean hasItem(Player player, Item item) {
