@@ -1,56 +1,37 @@
 package be.ephys.magicfeather;
 
 import be.ephys.cookiecore.config.ConfigSynchronizer;
-import net.minecraft.world.entity.ai.village.poi.PoiType;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.ObjectHolder;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
-@Mod(MagicFeatherMod.MODID)
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = MagicFeatherMod.MODID)
+@Mod(MagicFeatherMod.MOD_ID)
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD, modid = MagicFeatherMod.MOD_ID)
 public class MagicFeatherMod {
-  public static final String MODID = "magicfeather";
+  public static final String MOD_ID = "magicfeather";
 
-  @ObjectHolder("alexsmobs:am_beacon")
-  public static PoiType AM_BEACON_POI;
+  public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MagicFeatherMod.MOD_ID);
 
-  public static PoiType MF_BEACON_POI;
+  public static final RegistryObject<ItemMagicFeather> MAGIC_FEATHER_ITEM = ITEMS.register("magicfeather", ItemMagicFeather::new);
 
-  public MagicFeatherMod() {
+  public MagicFeatherMod(FMLJavaModLoadingContext context) {
     ConfigSynchronizer.synchronizeConfig();
 
-    FMLJavaModLoadingContext.get().getModEventBus().addGenericListener(PoiType.class, this::registerPoiTypes);
+    ITEMS.register(context.getModEventBus());
   }
 
-  public static PoiType getBeaconPoi() {
-    if (AM_BEACON_POI != null) {
-      return AM_BEACON_POI;
+  @SubscribeEvent
+  public static void onBuildContents(BuildCreativeModeTabContentsEvent event) {
+    if (event.getTabKey().equals(CreativeModeTabs.TOOLS_AND_UTILITIES)) {
+      event.accept(MAGIC_FEATHER_ITEM.get());
     }
-
-    return MF_BEACON_POI;
-  }
-
-  public void registerPoiTypes(RegistryEvent.Register<PoiType> event) {
-    if (ModList.get().isLoaded("alexsmobs")) {
-      return;
-    }
-
-    MF_BEACON_POI = new PoiType(
-      MagicFeatherMod.MODID + ":beacon",
-      PoiType.getBlockStates(Blocks.BEACON),
-      0,
-      1
-    );
-
-    MF_BEACON_POI.setRegistryName(MagicFeatherMod.MODID, "beacon");
-
-    event.getRegistry().register(MF_BEACON_POI);
-
   }
 
   @SubscribeEvent

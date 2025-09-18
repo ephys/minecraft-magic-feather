@@ -4,14 +4,14 @@ import be.ephys.cookiecore.config.Config;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ai.village.poi.PoiManager;
 import net.minecraft.world.level.block.entity.BeaconBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.ForgeConfigSpec;
 
-import java.util.Optional;
+import java.util.Objects;
 import java.util.WeakHashMap;
+import java.util.stream.Stream;
 
 public final class BeaconRangeCalculator {
 
@@ -47,56 +47,47 @@ public final class BeaconRangeCalculator {
   }
 
   public static boolean isInBeaconRange(Entity entity) {
-    ServerLevel world = (ServerLevel) entity.getLevel();
+    ServerLevel level = (ServerLevel) entity.level();
     Vec3 entityPos = entity.getEyePosition();
 
     BeaconVerticalRangeType verticalRangeType = BeaconRangeCalculator.verticalRangeType.get();
 
-    PoiManager poiManager = world.getPoiManager();
+    Stream<BlockEntity> tickingBlockEntities = level.blockEntityTickers.stream()
+      .filter(blockEntity -> !blockEntity.isRemoved() && blockEntity.getPos() != null)
+      .map(blockEntity -> level.getExistingBlockEntity(blockEntity.getPos()))
+      .filter(Objects::nonNull);
 
-    int maxRange = getRangeForLevel(6);
+    for (BlockEntity beaconEntity : (Iterable<BlockEntity>) tickingBlockEntities::iterator) {
+      int radius = getBeaconRange(beaconEntity);
+      if (radius == 0) {
+        continue;
+      }
 
-    Optional<BlockPos> foundBeaconPos = poiManager.find(
-      MagicFeatherMod.getBeaconPoi().getPredicate(),
-      (pos) -> {
-        BlockEntity blockEntityAtPos = world.getBlockEntity(pos);
+      BlockPos pos = beaconEntity.getBlockPos();
 
-        if (!(blockEntityAtPos instanceof BeaconBlockEntity)) {
-          return false;
+      int x = pos.getX();
+      int y = pos.getY();
+      int z = pos.getZ();
+
+      if (entityPos.x < (x - radius) || entityPos.x > (x + radius)) {
+        continue;
+      }
+
+      if (entityPos.z < (z - radius) || entityPos.z > (z + radius)) {
+        continue;
+      }
+
+      if (verticalRangeType != BeaconVerticalRangeType.FullHeight) {
+        if (entityPos.y < (y - radius - verticalRangeType.downRangeExtension)
+          || entityPos.y > (y + radius + verticalRangeType.upRangeExtension)) {
+          continue;
         }
+      }
 
-        int radius = getBeaconRange(blockEntityAtPos);
-        if (radius == 0) {
-          return false;
-        }
+      return true;
+    }
 
-        int x = pos.getX();
-        int y = pos.getY();
-        int z = pos.getZ();
-
-        if (entityPos.x < (x - radius) || entityPos.x > (x + radius)) {
-          return false;
-        }
-
-        if (entityPos.z < (z - radius) || entityPos.z > (z + radius)) {
-          return false;
-        }
-
-        if (verticalRangeType != BeaconVerticalRangeType.FullHeight) {
-          if (entityPos.y < (y - radius - verticalRangeType.downRangeExtension)
-            || entityPos.y > (y + radius + verticalRangeType.upRangeExtension)) {
-            return false;
-          }
-        }
-
-        return true;
-      },
-      entity.blockPosition(),
-      maxRange,
-      PoiManager.Occupancy.ANY
-    );
-
-    return foundBeaconPos.isPresent();
+    return false;
   }
 
   private static int getRangeForLevel(int level) {
@@ -116,7 +107,7 @@ public final class BeaconRangeCalculator {
 
     BeaconBlockEntity beacon = (BeaconBlockEntity) te;
     // beacon is disabled
-    if (beacon.beamSections.isEmpty()) {
+    if (beacon.getBeamSections().isEmpty()) {
       return 0;
     }
 

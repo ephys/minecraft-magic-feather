@@ -6,18 +6,13 @@ bin
 .classpath
 .project
 
-# idea
-out
-*.ipr
-*.iws
-*.iml
-.idea
-
 # gradle
 build
 .gradle
-/classes
 
 # other
 eclipse
 run
+
+# Files from Forge MDK
+forge*changelog.txt
